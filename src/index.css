@@ -871,3 +871,77 @@ body {
   opacity: 0.7;
   cursor: wait;
 }
+
+/* RESPONSIVE TABLE (CARD VIEW ON MOBILE) */
+@media (max-width: 768px) {
+  .users-table-container {
+    background: transparent;
+    border: none;
+    backdrop-filter: none;
+    box-shadow: none;
+    overflow-x: visible;
+    /* Disable scroll */
+  }
+
+  .users-table,
+  .users-table tbody,
+  .users-table tr,
+  .users-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .users-table thead {
+    display: none;
+    /* Hide headers */
+  }
+
+  .users-table tr {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    margin-bottom: 1rem;
+    padding: 1.25rem;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    backdrop-filter: blur(16px);
+  }
+
+  .users-table td {
+    padding: 0;
+    border: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: right;
+  }
+
+  .users-table td:before {
+    content: attr(data-label);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-right: 1rem;
+  }
+
+  /* Specific tweaks for cell contents */
+  .user-cell-profile {
+    width: 100%;
+  }
+
+  /* Hide label for Profile cell as it's self-explanatory */
+  .users-table td:first-child:before {
+    display: none;
+  }
+
+  .actions-cell {
+    width: 100%;
+    justify-content: flex-end;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    margin-top: 0.5rem;
+  }
+}

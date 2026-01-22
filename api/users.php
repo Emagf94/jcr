@@ -33,14 +33,12 @@ if ($method === 'GET') {
 
 // POST: Create User
 if ($method === 'POST') {
-    // Ideally check if requester is 'developer' here, but we'll do it in frontend for this rapid proto 
-    // or send 'requester_role' in body to verify validation.
-    // For security, strict checking should be done.
-    
-    // Simplification: We trust the input for this iteration or check logic.
-    // Let's implement basic check:
-    // $requester_role = $input['requester_role'] ?? '';
-    // if ($requester_role !== 'developer') { die(json_encode(['error' => 'Unauthorized'])); }
+    // Check requester role
+    $requesterRole = isset($input['requester_role']) ? $input['requester_role'] : '';
+    if (!in_array($requesterRole, ['developer', 'owner', 'mechanic'])) {
+         echo json_encode(['status' => 'error', 'message' => 'No autorizado para crear usuarios']);
+         exit();
+    }
 
     $username = $conn->real_escape_string($input['username']);
     $fullName = $conn->real_escape_string($input['full_name']);
@@ -53,6 +51,12 @@ if ($method === 'POST') {
         $role = 'mechanic'; // Default fallback
     }
     
+    // Security: Mechanic can only create mechanic (or maybe client later), not owner/dev
+    if ($requesterRole === 'mechanic' && $role !== 'mechanic') {
+         echo json_encode(['status' => 'error', 'message' => 'Mecánicos solo pueden crear usuarios mecánicos']);
+         exit();
+    }
+
     // Check duplicate
     $check = $conn->query("SELECT id FROM users WHERE username = '$username'");
     if ($check->num_rows > 0) {
@@ -74,6 +78,30 @@ if ($method === 'POST') {
 if ($method === 'PUT') {
     $id = intval($input['id']);
     
+    // Check requester role (sent from frontend or ideally session)
+    // Note: If request comes from SettingsPage (self update), allow it.
+    // We can distinguish self-update if $id match $requesterId, but here we simplify.
+    // If updating ONLY password and it's self (we don't check ID here yet properly without session), let's assume valid.
+    // BUT since we are implementing restrictions:
+    // If updating STATUS or ROLE or OTHERS -> Check permissions.
+    
+    // For now, simple logic:
+    // If changing password only -> Allow (assuming it's self-service via SettingsPage, though unsecured without session)
+    // If changing status/role -> Require dev/owner
+    
+    $isSensitiveUpdate = isset($input['status']) || isset($input['role']) || isset($input['username']) || isset($input['full_name']);
+    
+    // If password change only, we skip role check to allow SettingsPage to work for everyone
+    if ($isSensitiveUpdate) {
+        $requesterRole = isset($input['requester_role']) ? $input['requester_role'] : '';
+        if (!in_array($requesterRole, ['developer', 'owner'])) {
+             // Exception: User updating their OWN name/username? Not implemented in SettingsPage yet, only password.
+             // So safe to block for now.
+             echo json_encode(['status' => 'error', 'message' => 'No autorizado para editar usuarios']);
+             exit();
+        }
+    }
+
     // Prevent editing 'developer' status by others (safeguard)
     // Get target role
     $targetRes = $conn->query("SELECT role FROM users WHERE id = $id");
@@ -132,6 +160,13 @@ if ($method === 'PUT') {
 
 // DELETE: Not requested ("habilitar y deshabilitar"), but good to have safeguard
 if ($method === 'DELETE') {
+    $requesterRole = isset($_GET['requester_role']) ? $_GET['requester_role'] : '';
+    
+    if (!in_array($requesterRole, ['developer', 'owner'])) {
+         echo json_encode(['status' => 'error', 'message' => 'No autorizado para eliminar']);
+         exit();
+    }
+
     // Only developer can delete? User asked for enable/disable mostly. 
     // Implementing delete with developer check.
     $id = intval($_GET['id']);

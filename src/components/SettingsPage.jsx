@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Lock, Save, AlertCircle, CheckCircle } from 'lucide-react';
+import { Lock, Save } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 function SettingsPage({ currentUser }) {
     const [formData, setFormData] = useState({
@@ -7,50 +8,65 @@ function SettingsPage({ currentUser }) {
         newPassword: '',
         confirmPassword: ''
     });
-    const [status, setStatus] = useState({ type: '', msg: '' });
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setStatus({ type: '', msg: '' });
 
         if (formData.newPassword !== formData.confirmPassword) {
-            setStatus({ type: 'error', msg: 'Las nuevas contraseñas no coinciden.' });
+            Swal.fire({
+                title: 'Error',
+                text: 'Las nuevas contraseñas no coinciden.',
+                icon: 'error',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
             return;
         }
 
         if (formData.newPassword.length < 6) {
-            setStatus({ type: 'error', msg: 'La contraseña debe tener al menos 6 caracteres.' });
+            Swal.fire({
+                title: 'Error',
+                text: 'La contraseña debe tener al menos 6 caracteres.',
+                icon: 'error',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
             return;
         }
 
         setLoading(true);
 
         try {
-            // We reuse the update user endpoint. 
-            // Note: In a real app we should verify currentPassword on server. 
-            // For this rapid prototype, we are just updating the password directly.
-
             const res = await fetch('http://localhost/jcr/api/users.php', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     id: currentUser.id,
                     password: formData.newPassword
-                    // In a production app, send currentPassword to verify
                 })
             });
 
             const data = await res.json();
 
             if (data.status === 'success') {
-                setStatus({ type: 'success', msg: 'Contraseña actualizada exitosamente.' });
+                Swal.fire({
+                    title: '¡Actualizado!',
+                    text: 'Contraseña actualizada exitosamente.',
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
                 setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' });
             } else {
-                setStatus({ type: 'error', msg: data.message || 'Error al actualizar.' });
+                Swal.fire('Error', data.message || 'Error al actualizar', 'error');
             }
         } catch (error) {
-            setStatus({ type: 'error', msg: 'Error de conexión.' });
+            Swal.fire('Error', 'Error de conexión', 'error');
         } finally {
             setLoading(false);
         }
@@ -91,13 +107,6 @@ function SettingsPage({ currentUser }) {
                             required
                         />
                     </div>
-
-                    {status.msg && (
-                        <div className={`status-msg ${status.type}`}>
-                            {status.type === 'success' ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
-                            <span>{status.msg}</span>
-                        </div>
-                    )}
 
                     <div className="form-actions">
                         <button type="submit" className="btn-save" disabled={loading}>

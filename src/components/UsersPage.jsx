@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Swal from 'sweetalert2';
 import {
     UserPlus,
     Pencil,
@@ -10,6 +11,8 @@ import {
     User,
     X
 } from 'lucide-react';
+
+// ... (other imports)
 
 function UsersPage({ currentUser }) {
     const [users, setUsers] = useState([]);
@@ -68,16 +71,31 @@ function UsersPage({ currentUser }) {
         e.preventDefault();
         setMsg('');
 
-        if (currentUser.role !== 'developer') {
-            setMsg('Acceso denegado.');
-            return;
+        // Validations
+        if (isEditing) {
+            if (currentUser.role !== 'developer' && currentUser.role !== 'owner') {
+                Swal.fire('Error', 'Acceso denegado: Solo Administrador y Dev pueden editar.', 'error');
+                return;
+            }
+        } else {
+            if (!['developer', 'owner', 'mechanic'].includes(currentUser.role)) {
+                Swal.fire('Error', 'Acceso denegado.', 'error');
+                return;
+            }
         }
 
         const url = 'http://localhost/jcr/api/users.php';
         const method = isEditing ? 'PUT' : 'POST';
-        const body = isEditing ? { ...formData, id: currentUserId } : formData;
+        const body = isEditing ?
+            { ...formData, id: currentUserId, requester_role: currentUser.role } :
+            { ...formData, requester_role: currentUser.role };
+
+        const actionText = isEditing ? 'actualizando' : 'creando';
 
         try {
+            // Optional: Show loading?
+            // Swal.showLoading(); 
+
             const res = await fetch(url, {
                 method: method,
                 headers: { 'Content-Type': 'application/json' },
@@ -87,34 +105,85 @@ function UsersPage({ currentUser }) {
 
             if (data.status === 'success') {
                 setShowModal(false);
+                Swal.fire({
+                    title: '¡Éxito!',
+                    text: isEditing ? 'Usuario actualizado correctamente' : 'Usuario creado correctamente',
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
                 fetchUsers();
             } else {
-                setMsg(data.message || 'Error');
+                Swal.fire('Error', data.message || 'Error desconocido', 'error');
             }
         } catch (error) {
-            setMsg('Error de conexión');
+            Swal.fire('Error', 'Error de conexión con el servidor', 'error');
         }
     };
 
     const toggleStatus = async (id, currentStatus, role) => {
-        if (currentUser.role !== 'developer' || role === 'developer') return;
+        if (!['developer', 'owner'].includes(currentUser.role)) return;
+        if (role === 'developer') return;
 
         const newStatus = currentStatus == 1 ? 0 : 1;
-        await fetch('http://localhost/jcr/api/users.php', {
-            method: 'PUT',
-            body: JSON.stringify({ id, status: newStatus })
-        });
-        fetchUsers();
+
+        try {
+            await fetch('http://localhost/jcr/api/users.php', {
+                method: 'PUT',
+                body: JSON.stringify({ id, status: newStatus, requester_role: currentUser.role })
+            });
+            fetchUsers();
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 1500,
+                timerProgressBar: true
+            });
+            Toast.fire({
+                icon: 'success',
+                title: `Usuario ${newStatus == 1 ? 'activado' : 'desactivado'}`
+            });
+        } catch (err) {
+            Swal.fire('Error', 'No se pudo cambiar el estado', 'error');
+        }
     };
 
     const deleteUser = async (id, role, name) => {
-        if (currentUser.role !== 'developer' || role === 'developer') return;
+        if (!['developer', 'owner'].includes(currentUser.role)) return;
+        if (role === 'developer') return;
 
-        if (confirm(`¿Eliminar al usuario "${name}"?`)) {
-            await fetch(`http://localhost/jcr/api/users.php?id=${id}`, {
-                method: 'DELETE'
-            });
-            fetchUsers();
+        const result = await Swal.fire({
+            title: `¿Eliminar a ${name}?`,
+            text: "Esta acción no se puede deshacer.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar',
+            background: '#1e293b',
+            color: '#fff'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                await fetch(`http://localhost/jcr/api/users.php?id=${id}&requester_role=${currentUser.role}`, {
+                    method: 'DELETE'
+                });
+                Swal.fire({
+                    title: 'Eliminado',
+                    text: 'El usuario ha sido eliminado.',
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: false,
+                    background: '#1e293b',
+                    color: '#fff'
+                });
+                fetchUsers();
+            } catch (err) {
+                Swal.fire('Error', 'Hubo un problema al eliminar', 'error');
+            }
         }
     }
 
@@ -136,7 +205,7 @@ function UsersPage({ currentUser }) {
                     <p>Administra el acceso al sistema JCR Motos</p>
                 </div>
 
-                {currentUser.role === 'developer' && (
+                {['developer', 'owner', 'mechanic'].includes(currentUser.role) && (
                     <button onClick={openCreateModal} className="btn-add">
                         <UserPlus size={20} />
                         <span>Nuevo Usuario</span>
@@ -158,7 +227,7 @@ function UsersPage({ currentUser }) {
                     <tbody>
                         {users.map(u => (
                             <tr key={u.id}>
-                                <td>
+                                <td data-label="Usuario / Nombre">
                                     <div className="user-cell-profile">
                                         <div className={`avatar-circle ${u.role === 'developer' ? 'avatar-dev' : ''}`}>
                                             {u.username.charAt(0).toUpperCase()}
@@ -169,20 +238,20 @@ function UsersPage({ currentUser }) {
                                         </div>
                                     </div>
                                 </td>
-                                <td>
+                                <td data-label="Rol">
                                     <span className="badge badge-role">
                                         {u.role === 'developer' ? <Shield size={12} /> : <User size={12} />}
                                         {getRoleName(u.role)}
                                     </span>
                                 </td>
-                                <td>
+                                <td data-label="Estado">
                                     <span className={`badge ${u.status == 1 ? 'badge-active' : 'badge-inactive'}`}>
                                         {u.status == 1 ? 'ACTIVO' : 'INACTIVO'}
                                     </span>
                                 </td>
-                                <td>
+                                <td data-label="Acciones">
                                     <div className="actions-cell">
-                                        {currentUser.role === 'developer' && u.role !== 'developer' ? (
+                                        {['developer', 'owner'].includes(currentUser.role) && u.role !== 'developer' ? (
                                             <>
                                                 <button
                                                     onClick={() => openEditModal(u)}
@@ -207,7 +276,11 @@ function UsersPage({ currentUser }) {
                                                 </button>
                                             </>
                                         ) : (
-                                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Protegido</span>
+                                            u.role === 'developer' ? (
+                                                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Protegido</span>
+                                            ) : (
+                                                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Ver solo</span>
+                                            )
                                         )}
                                     </div>
                                 </td>
