@@ -5,6 +5,7 @@ import {
     Box, Tag, MapPin, Barcode
 } from 'lucide-react';
 import Swal from 'sweetalert2';
+import { API_URL } from '../config';
 
 // Categories relevant to motorcycle repair
 const CATEGORIES = [
@@ -48,7 +49,7 @@ function InventoryPage({ currentUser }) {
     const fetchInventory = async () => {
         setLoading(true);
         try {
-            const res = await fetch('http://localhost/jcr/api/inventory.php');
+            const res = await fetch(`${API_URL}/inventory.php`);
             const data = await res.json();
             if (data.status === 'success') {
                 setItems(data.data);
@@ -76,7 +77,7 @@ function InventoryPage({ currentUser }) {
         const method = formData.id ? 'PUT' : 'POST';
 
         try {
-            const res = await fetch('http://localhost/jcr/api/inventory.php', {
+            const res = await fetch(`${API_URL}/inventory.php`, {
                 method: method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
@@ -113,7 +114,7 @@ function InventoryPage({ currentUser }) {
 
         if (result.isConfirmed) {
             try {
-                const res = await fetch(`http://localhost/jcr/api/inventory.php?id=${id}`, { method: 'DELETE' });
+                const res = await fetch(`${API_URL}/inventory.php?id=${id}`, { method: 'DELETE' });
                 const data = await res.json();
                 if (data.status === 'success') {
                     Swal.fire('Eliminado', 'Producto eliminado.', 'success');

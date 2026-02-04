@@ -10,6 +10,7 @@ import {
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import Swal from 'sweetalert2';
+import { API_URL } from '../config';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
@@ -30,7 +31,7 @@ function ReportsPage({ currentUser }) {
     const fetchReport = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`http://localhost/jcr/api/reports.php?start=${startDate}&end=${endDate}`);
+            const res = await fetch(`${API_URL}/reports.php?start=${startDate}&end=${endDate}`);
             const data = await res.json();
             if (data.status === 'success') {
                 setReportData(data);
@@ -175,7 +176,7 @@ function ReportsPage({ currentUser }) {
                 <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
 
                     {/* KPI Cards */}
-                    <div className="dashboard-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+                    <div className="dashboard-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
                         <div className="stat-card">
                             <div className="stat-label">Ingresos Totales</div>
                             <div className="stat-value text-green-400">$ {KPIs.revenue.toLocaleString()}</div>

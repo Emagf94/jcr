@@ -4,6 +4,7 @@ import Swal from 'sweetalert2';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import './MotorcyclesPage.css';
+import { API_URL } from '../config';
 
 // Datos de Motos para Selectores Dinámicos
 const MOTO_DATA = {
@@ -129,14 +130,24 @@ function MotorcyclesPage({ currentUser }) {
     const fetchMotorcycles = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`http://localhost/jcr/api/motorcycles.php?search=${searchTerm}`);
-            const data = await res.json();
-            if (data.status === 'success') {
-                setMotorcycles(data.data);
+            const res = await fetch(`${API_URL}/motorcycles.php?search=${searchTerm}`);
+            const text = await res.text();
+
+            try {
+                const data = JSON.parse(text);
+                if (data.status === 'success') {
+                    setMotorcycles(data.data);
+                } else {
+                    Swal.fire('Error', data.message || 'Error del servidor', 'error');
+                }
+            } catch (err) {
+                // Remove console logs, show clean message
+                // Clean up potentially long HTML response for the alert
+                const cleanText = text.replace(/<[^>]*>?/gm, '').substring(0, 150);
+                Swal.fire('Error del Servidor', `Detalle: ${cleanText}`, 'error');
             }
         } catch (error) {
-            console.error(error);
-            Swal.fire('Error', 'No se pudieron cargar las motos', 'error');
+            Swal.fire('Error', 'Error de conexión', 'error');
         } finally {
             setLoading(false);
         }
@@ -144,7 +155,7 @@ function MotorcyclesPage({ currentUser }) {
 
     const fetchMaintenanceHistory = async (motoId) => {
         try {
-            const res = await fetch(`http://localhost/jcr/api/maintenance.php?moto_id=${motoId}`);
+            const res = await fetch(`${API_URL}/maintenance.php?moto_id=${motoId}`);
             const data = await res.json();
             if (data.status === 'success') {
                 setMaintenanceRecords(data.data);
@@ -223,7 +234,7 @@ function MotorcyclesPage({ currentUser }) {
         }
 
         try {
-            const res = await fetch('http://localhost/jcr/api/motorcycles.php', {
+            const res = await fetch(`${API_URL}/motorcycles.php`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(finalData)
@@ -422,7 +433,7 @@ function MotorcyclesPage({ currentUser }) {
                     const yPos = currentY + (row * (boxH + 10));
 
                     try {
-                        const photoUrl = `http://localhost/jcr/api/get_image.php?file=${encodeURIComponent(record.photos[i])}`;
+                        const photoUrl = `${API_URL}/get_image.php?file=${encodeURIComponent(record.photos[i])}`;
 
                         // 1. Fetch Blob
                         const res = await fetch(photoUrl);
@@ -551,7 +562,7 @@ function MotorcyclesPage({ currentUser }) {
         });
 
         try {
-            const res = await fetch('http://localhost/jcr/api/maintenance.php', {
+            const res = await fetch(`${API_URL}/maintenance.php`, {
                 method: 'POST',
                 // No Content-Type header needed for FormData; browser sets it with boundary
                 body: formDataPayload

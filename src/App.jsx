@@ -1,29 +1,41 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import Dashboard from './components/Dashboard';
+import { API_URL } from './config';
 
 function App() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  // Check if user is in localStorage to persist login across reloads
-  const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('jcr_user');
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const handleSubmit = async (e) => {
+  // Login Form State
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const checkSession = () => {
+    const stored = localStorage.getItem('user_session');
+    if (stored) {
+      setUser(JSON.parse(stored));
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    checkSession();
+  }, []);
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
     setError('');
+    setLoading(true); // Set loading to true when login attempt starts
 
     try {
-      const response = await fetch('http://localhost/jcr/api/login.php', {
+      const response = await fetch(`${API_URL}/login.php`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username: email, password }),
       });
 
       const data = await response.json();
@@ -38,14 +50,14 @@ function App() {
       console.error(err);
       setError('Error de red. Asegúrate de que XAMPP esté ejecutándose.');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem('jcr_user');
-    setUsername('');
+    setEmail('');
     setPassword('');
   };
 
@@ -68,7 +80,7 @@ function App() {
 
         {error && <div className="error-msg">{error}</div>}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleLogin}>
           <div className="form-group">
             <label htmlFor="username">Usuario</label>
             <div className="input-wrapper">
@@ -76,9 +88,9 @@ function App() {
                 type="text"
                 id="username"
                 className="form-control"
-                placeholder="Ingresa tu usuario"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Ingresa tu usuario o email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="username"
               />
@@ -103,9 +115,9 @@ function App() {
             </div>
           </div>
 
-          <button type="submit" className="btn-primary" disabled={isLoading}>
-            {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-            {!isLoading && <span>→</span>}
+          <button type="submit" className="btn-primary" disabled={loading}>
+            {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+            {!loading && <span>→</span>}
           </button>
         </form>
       </div>

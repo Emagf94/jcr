@@ -93,9 +93,15 @@ body {
   text-align: left;
 }
 
+@media (max-width: 480px) {
+  .form-group label {
+    font-size: 0.85rem;
+  }
+}
+
 .form-group label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
   font-size: 0.9rem;
   color: var(--text-muted);
   font-weight: 500;
@@ -348,17 +354,25 @@ body {
 }
 
 .dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
-  margin-top: 1.5rem;
+  /* Responsive Cards */
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 480px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    /* Stack vertically on very small screens */
+  }
 }
 
 .stat-card {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
-  border-radius: 20px;
-  padding: 1.5rem;
+  border-radius: 16px;
+  /* Slightly reduced radius for mobile */
+  padding: 1.25rem;
 }
 
 .stat-header {
@@ -486,17 +500,15 @@ body {
   background: var(--card-bg);
   backdrop-filter: blur(16px);
   border: 1px solid var(--border-color);
-  border-radius: 20px;
-  overflow-x: auto;
-  /* Allow horizontal scroll on small screens */
+  border-radius: 16px;
+  /* Overflow removed to allow stack on mobile, controlled by media query */
   box-shadow: var(--shadow-lg);
+  margin-bottom: 2rem;
 }
 
 .users-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 600px;
-  /* Force min width to prevent squashing */
 }
 
 .users-table th {
@@ -523,6 +535,49 @@ body {
 
 .users-table tr:hover {
   background: rgba(255, 255, 255, 0.02);
+}
+
+/* RESPONSIVE TABLE (CARD VIEW) */
+@media (max-width: 768px) {
+  .users-table thead {
+    display: none;
+    /* Hide headers */
+  }
+
+  .users-table,
+  .users-table tbody,
+  .users-table tr,
+  .users-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .users-table tr {
+    margin-bottom: 1.5rem;
+    background: rgba(30, 41, 59, 0.6);
+    /* Slightly darker card bg */
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+
+  .users-table td {
+    padding: 0.75rem 0;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .users-table td:last-child {
+    border-bottom: none;
+    padding-top: 1rem;
+    justify-content: flex-end;
+    /* Actions at the end */
+    gap: 1rem;
+  }
 }
 
 .user-cell-profile {

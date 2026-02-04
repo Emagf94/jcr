@@ -4,6 +4,7 @@ import {
     Calendar, User, Plus, Search, Archive, AlertTriangle
 } from 'lucide-react';
 import Swal from 'sweetalert2';
+import { API_URL } from '../config';
 
 function SalesPage({ currentUser }) {
     const [view, setView] = useState('pos'); // pos, history
@@ -20,7 +21,7 @@ function SalesPage({ currentUser }) {
     const fetchProducts = async () => {
         setLoading(true);
         try {
-            const res = await fetch('http://localhost/jcr/api/inventory.php');
+            const res = await fetch(`${API_URL}/inventory.php`);
             const data = await res.json();
             if (data.status === 'success') {
                 // Only show items with stock > 0
@@ -33,7 +34,7 @@ function SalesPage({ currentUser }) {
     const fetchHistory = async () => {
         setLoading(true);
         try {
-            const res = await fetch('http://localhost/jcr/api/sales.php');
+            const res = await fetch(`${API_URL}/sales.php`);
             const data = await res.json();
             if (data.status === 'success') setSalesHistory(data.data);
         } catch (e) { console.error(e); }
@@ -89,7 +90,7 @@ function SalesPage({ currentUser }) {
         if (confirm.isConfirmed) {
             setLoading(true);
             try {
-                const res = await fetch('http://localhost/jcr/api/sales.php', {
+                const res = await fetch(`${API_URL}/sales.php`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

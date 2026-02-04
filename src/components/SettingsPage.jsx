@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Lock, Save } from 'lucide-react';
 import Swal from 'sweetalert2';
+import { API_URL } from '../config';
 
 function SettingsPage({ currentUser }) {
     const [formData, setFormData] = useState({
@@ -42,7 +43,7 @@ function SettingsPage({ currentUser }) {
         setLoading(true);
 
         try {
-            const res = await fetch('http://localhost/jcr/api/users.php', {
+            const res = await fetch(`${API_URL}/users.php`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

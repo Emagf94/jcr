@@ -21,16 +21,28 @@ switch ($method) {
         break;
 }
 
+
 function handleGet($conn) {
+    // Error handling to prevent HTML output breaking JSON
+    error_reporting(E_ALL);
+    ini_set('display_errors', 0);
+
     $search = isset($_GET['search']) ? $conn->real_escape_string($_GET['search']) : '';
     
     $sql = "SELECT * FROM motorcycles";
     if ($search) {
         $sql .= " WHERE license_plate LIKE '%$search%' OR owner_name LIKE '%$search%' OR owner_id LIKE '%$search%'";
     }
-    $sql .= " ORDER BY created_at DESC";
+    // Changed to id to prevent errors if created_at doesn't exist
+    $sql .= " ORDER BY id DESC";
 
     $result = $conn->query($sql);
+    
+    if (!$result) {
+        http_response_code(500);
+        echo json_encode(["status" => "error", "message" => "SQL Error: " . $conn->error]);
+        return;
+    }
     
     $motorcycles = [];
     if ($result->num_rows > 0) {

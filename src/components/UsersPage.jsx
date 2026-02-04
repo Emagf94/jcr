@@ -11,6 +11,7 @@ import {
     User,
     X
 } from 'lucide-react';
+import { API_URL } from '../config';
 
 // ... (other imports)
 
@@ -33,7 +34,7 @@ function UsersPage({ currentUser }) {
 
     const fetchUsers = async () => {
         try {
-            const res = await fetch('http://localhost/jcr/api/users.php');
+            const res = await fetch(`${API_URL}/users.php`);
             const data = await res.json();
             setUsers(data);
         } catch (err) {
@@ -84,7 +85,7 @@ function UsersPage({ currentUser }) {
             }
         }
 
-        const url = 'http://localhost/jcr/api/users.php';
+        const url = `${API_URL}/users.php`;
         const method = isEditing ? 'PUT' : 'POST';
         const body = isEditing ?
             { ...formData, id: currentUserId, requester_role: currentUser.role } :
@@ -128,7 +129,7 @@ function UsersPage({ currentUser }) {
         const newStatus = currentStatus == 1 ? 0 : 1;
 
         try {
-            await fetch('http://localhost/jcr/api/users.php', {
+            await fetch(`${API_URL}/users.php`, {
                 method: 'PUT',
                 body: JSON.stringify({ id, status: newStatus, requester_role: currentUser.role })
             });
@@ -168,7 +169,7 @@ function UsersPage({ currentUser }) {
 
         if (result.isConfirmed) {
             try {
-                await fetch(`http://localhost/jcr/api/users.php?id=${id}&requester_role=${currentUser.role}`, {
+                await fetch(`${API_URL}/users.php?id=${id}&requester_role=${currentUser.role}`, {
                     method: 'DELETE'
                 });
                 Swal.fire({
