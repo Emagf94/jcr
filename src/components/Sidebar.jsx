@@ -7,7 +7,8 @@ import {
     X,
     PieChart,
     Box,
-    CreditCard
+    CreditCard,
+    Bike
 } from 'lucide-react';
 
 function Sidebar({ isOpen, onClose, user, onLogout, currentView, onNavigate }) {
@@ -60,18 +61,32 @@ function Sidebar({ isOpen, onClose, user, onLogout, currentView, onNavigate }) {
                         <Home size={20} />
                         <span>Inicio</span>
                     </a>
+                    <a href="#" onClick={handleNav('motorcycles')} className={`nav-item ${currentView === 'motorcycles' ? 'active' : ''}`}>
+                        <Bike size={20} />
+                        <span>Motos</span>
+                    </a>
+                    <a href="#" onClick={handleNav('reports')} className={`nav-item ${currentView === 'reports' ? 'active' : ''}`}>
+                        <PieChart size={20} />
+                        <span>Reportes</span>
+                    </a>
+                    <a href="#" onClick={handleNav('sales')} className={`nav-item ${currentView === 'sales' ? 'active' : ''}`}>
+                        <CreditCard size={20} />
+                        <span>Ventas</span>
+                    </a>
+
+                    {/* Inventory - Only for Owner/Developer */}
+                    {(user.role === 'owner' || user.role === 'developer') && (
+                        <a href="#" onClick={handleNav('inventory')} className={`nav-item ${currentView === 'inventory' ? 'active' : ''}`}>
+                            <Box size={20} />
+                            <span>Inventario</span>
+                        </a>
+                    )}
+
                     <a href="#" onClick={handleNav('users')} className={`nav-item ${currentView === 'users' ? 'active' : ''}`}>
                         <Users size={20} />
                         <span>Usuarios</span>
                     </a>
-                    <a href="#" className="nav-item">
-                        <PieChart size={20} />
-                        <span>Reportes</span>
-                    </a>
-                    <a href="#" className="nav-item">
-                        <CreditCard size={20} />
-                        <span>Ventas</span>
-                    </a>
+
                     <div style={{ flex: 1 }}></div>
                     <a href="#" onClick={handleNav('settings')} className={`nav-item ${currentView === 'settings' ? 'active' : ''}`}>
                         <Settings size={20} />
