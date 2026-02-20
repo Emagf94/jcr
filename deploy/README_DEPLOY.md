@@ -47,3 +47,9 @@ Los archivos del frontend están optimizados. Sin embargo, si tu dominio NO es l
 - Visita tu URL.
 - Intenta iniciar sesión.
 - Si las APIs fallan, abre las Herramientas de Desarrollador (F12) -> pestaña Red (Network) para ver si las URLs de las peticiones son correctas.
+
+
+facnetco_jcr_db
+facnetco_jcr
+6PVu!7_M0h59-0tF
+104.156.49.50
